@@ -1,0 +1,201 @@
+@if (loading()) {
+  <div class="flex justify-center py-8">
+    <p-progressSpinner strokeWidth="4" />
+  </div>
+} @else if (!team()) {
+  <div class="card text-center py-8">
+    <i class="pi pi-exclamation-triangle text-5xl text-orange-500 mb-4"></i>
+    <h2>No Team Found</h2>
+    <p class="text-surface-500 mb-4">You are not registered for any tournament yet.</p>
+    <a routerLink="/">
+      <p-button label="Browse Tournaments" icon="pi pi-search" />
+    </a>
+  </div>
+} @else {
+  <div class="grid grid-cols-12 gap-4">
+    <!-- Team Info Card -->
+    <div class="col-span-12">
+      <div class="card">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="m-0 mb-2">{{ team()!.team_name }}</h2>
+            <div class="flex items-center gap-3">
+              <p-tag 
+                [value]="team()!.status" 
+                [severity]="getStatusSeverity(team()!.status)"
+                [style]="{ textTransform: 'capitalize' }"
+              />
+              @if (tournament()) {
+                <span class="text-surface-500">{{ tournament()!.name }}</span>
+              }
+            </div>
+          </div>
+          <a routerLink="/team/roster">
+            <p-button label="Manage Roster" icon="pi pi-users" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="col-span-12 md:col-span-4">
+      <div class="card h-full">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-medium text-surface-500">Team Status</span>
+          <div class="rounded-md p-2" 
+               [ngClass]="{
+                 'bg-green-100 text-green-600': team()!.status === 'approved',
+                 'bg-orange-100 text-orange-600': team()!.status === 'pending',
+                 'bg-red-100 text-red-600': team()!.status === 'rejected'
+               }">
+            <i class="pi" 
+               [ngClass]="{
+                 'pi-check-circle': team()!.status === 'approved',
+                 'pi-clock': team()!.status === 'pending',
+                 'pi-times-circle': team()!.status === 'rejected'
+               }"></i>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-surface-900 capitalize">{{ team()!.status }}</div>
+        @if (team()!.status === 'pending') {
+          <span class="text-surface-500">Awaiting admin approval</span>
+        } @else if (team()!.status === 'approved') {
+          <span class="text-surface-500">You're in the tournament!</span>
+        }
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-4">
+      <div class="card h-full">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-medium text-surface-500">Roster Status</span>
+          <div class="rounded-md p-2"
+               [ngClass]="{
+                 'bg-green-100 text-green-600': team()!.roster_status === 'locked',
+                 'bg-blue-100 text-blue-600': team()!.roster_status === 'submitted',
+                 'bg-gray-100 text-gray-600': team()!.roster_status === 'draft'
+               }">
+            <i class="pi"
+               [ngClass]="{
+                 'pi-lock': team()!.roster_status === 'locked',
+                 'pi-send': team()!.roster_status === 'submitted',
+                 'pi-pencil': team()!.roster_status === 'draft'
+               }"></i>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-surface-900 capitalize">{{ team()!.roster_status }}</div>
+        @if (team()!.roster_status === 'draft') {
+          <a routerLink="/team/roster" class="text-primary-500 hover:text-primary-600">Complete your roster</a>
+        } @else if (team()!.roster_status === 'submitted') {
+          <span class="text-surface-500">Under review</span>
+        }
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-4">
+      <div class="card h-full">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-medium text-surface-500">Players</span>
+          <div class="rounded-md bg-purple-100 p-2 text-purple-600">
+            <i class="pi pi-users"></i>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-surface-900">
+          {{ playerCount() }} / {{ tournament()?.players_per_team || '?' }}
+        </div>
+        @if (playerCount() < (tournament()?.players_per_team || 0)) {
+          <a routerLink="/team/roster" class="text-primary-500 hover:text-primary-600">Add more players</a>
+        } @else {
+          <span class="text-green-500">Roster complete</span>
+        }
+      </div>
+    </div>
+
+    <!-- Upcoming Matches -->
+    <div class="col-span-12 lg:col-span-6">
+      <div class="card">
+        <div class="mb-4 flex items-center justify-between">
+          <h4 class="m-0">Upcoming Matches</h4>
+          <a routerLink="/team/matches">
+            <p-button label="View All" [link]="true" />
+          </a>
+        </div>
+
+        @if (upcomingMatches().length > 0) {
+          <div class="flex flex-col gap-3">
+            @for (match of upcomingMatches(); track match.id) {
+              <div class="rounded-md bg-surface-100 p-3">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="font-medium">
+                    {{ match.home_team_name }} vs {{ match.away_team_name }}
+                  </span>
+                  <p-tag value="scheduled" severity="info" />
+                </div>
+                <div class="flex gap-4 text-sm text-surface-500">
+                  @if (match.match_date) {
+                    <span><i class="pi pi-calendar mr-1"></i>{{ match.match_date | date:'short' }}</span>
+                  }
+                  @if (match.venue) {
+                    <span><i class="pi pi-map-marker mr-1"></i>{{ match.venue }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="py-4 text-center text-surface-500">
+            <i class="pi pi-calendar text-3xl mb-2"></i>
+            <p>No upcoming matches scheduled</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-span-12 lg:col-span-6">
+      <div class="card">
+        <h4 class="mb-4">Quick Actions</h4>
+        <div class="flex flex-col gap-3">
+          <a routerLink="/team/roster" class="no-underline">
+            <div class="flex cursor-pointer items-center gap-3 rounded-md bg-surface-100 p-3 transition-colors hover:bg-surface-200">
+              <div class="rounded-md bg-primary-500 p-2 text-white">
+                <i class="pi pi-users"></i>
+              </div>
+              <div>
+                <div class="font-medium">Manage Roster</div>
+                <div class="text-sm text-surface-500">Add or edit players</div>
+              </div>
+              <i class="pi pi-chevron-right ml-auto"></i>
+            </div>
+          </a>
+
+          <a routerLink="/team/matches" class="no-underline">
+            <div class="flex cursor-pointer items-center gap-3 rounded-md bg-surface-100 p-3 transition-colors hover:bg-surface-200">
+              <div class="rounded-md bg-blue-500 p-2 text-white">
+                <i class="pi pi-calendar"></i>
+              </div>
+              <div>
+                <div class="font-medium">Match Schedule</div>
+                <div class="text-sm text-surface-500">View your fixtures</div>
+              </div>
+              <i class="pi pi-chevron-right ml-auto"></i>
+            </div>
+          </a>
+
+          <a routerLink="/team/standings" class="no-underline">
+            <div class="flex cursor-pointer items-center gap-3 rounded-md bg-surface-100 p-3 transition-colors hover:bg-surface-200">
+              <div class="rounded-md bg-green-500 p-2 text-white">
+                <i class="pi pi-chart-bar"></i>
+              </div>
+              <div>
+                <div class="font-medium">Standings</div>
+                <div class="text-sm text-surface-500">View tournament table</div>
+              </div>
+              <i class="pi pi-chevron-right ml-auto"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+}

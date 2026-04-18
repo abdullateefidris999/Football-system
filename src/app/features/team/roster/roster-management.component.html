@@ -1,0 +1,217 @@
+<p-toast />
+<p-confirmDialog />
+
+@if (loading()) {
+  <div class="flex justify-center py-8">
+    <p-progressSpinner strokeWidth="4" />
+  </div>
+} @else if (!team()) {
+  <div class="card text-center py-8">
+    <i class="pi pi-exclamation-triangle text-5xl text-orange-500 mb-4"></i>
+    <h2>No Team Found</h2>
+    <p class="text-surface-500">You need to register for a tournament first.</p>
+  </div>
+} @else {
+  <div class="card">
+    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="m-0 mb-2">Team Roster</h2>
+        <div class="flex items-center gap-3">
+          <p-tag 
+            [value]="team()!.roster_status" 
+            [severity]="team()!.roster_status === 'locked' ? 'success' : team()!.roster_status === 'submitted' ? 'info' : 'secondary'"
+          />
+          <span class="text-surface-500">
+            {{ players.length }} / {{ tournament()?.players_per_team }} players
+          </span>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        @if (!isRosterLocked) {
+          <p-button 
+            label="Add Player" 
+            icon="pi pi-plus" 
+            (onClick)="showAddDialog()"
+            [disabled]="team()!.roster_status === 'submitted'"
+          />
+        }
+        @if (canSubmitRoster) {
+          <p-button 
+            label="Submit Roster" 
+            icon="pi pi-send" 
+            severity="success"
+            (onClick)="submitRoster()"
+          />
+        }
+      </div>
+    </div>
+
+    <!-- Roster Requirements -->
+    @if (team()!.roster_status === 'draft') {
+      <div class="mb-4 rounded-md bg-surface-100 p-3">
+        <div class="font-medium mb-2">Roster Requirements:</div>
+        <ul class="m-0 pl-4">
+          <li [class.text-green-500]="players.length >= (tournament()?.players_per_team || 0)">
+            maximum {{ tournament()?.players_per_team }} players 
+            @if (players.length <= (tournament()?.players_per_team || 0)) {
+              <i class="pi pi-check"></i>
+            }
+          </li>
+          <li [class.text-green-500]="playerService.hasCaptain()">
+            Designate a captain 
+            @if (playerService.hasCaptain()) {
+              <i class="pi pi-check"></i>
+            }
+          </li>
+        </ul>
+      </div>
+    }
+
+    <!-- Players Table -->
+    <p-table [value]="players" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px">#</th>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Level</th>
+          <th style="width: 80px">Captain</th>
+          @if (!isRosterLocked && team()!.roster_status !== 'submitted') {
+            <th style="width: 120px">Actions</th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-player>
+        <tr>
+          <td>{{ player.jersey_number || '-' }}</td>
+          <td class="font-medium">
+            {{ player.name }}
+            @if (player.is_captain) {
+              <i class="pi pi-star-fill ml-2 text-yellow-500" pTooltip="Captain"></i>
+            }
+          </td>
+          <td>
+            @if (player.position) {
+              <p-tag [value]="player.position" severity="secondary" />
+            } @else {
+              <span class="text-surface-500">-</span>
+            }
+          </td>
+          <td>{{ player.department || '-' }}</td>
+          <td>{{ player.level || '-' }}</td>
+          <td>
+            @if (!isRosterLocked && team()!.roster_status !== 'submitted') {
+              <p-button
+                [icon]="player.is_captain ? 'pi pi-star-fill' : 'pi pi-star'"
+                [rounded]="true"
+                [text]="true"
+                [severity]="player.is_captain ? 'warn' : 'secondary'"
+                (onClick)="setCaptain(player)"
+                pTooltip="Set as Captain"
+              />
+            } @else if (player.is_captain) {
+              <i class="pi pi-star-fill text-yellow-500"></i>
+            }
+          </td>
+          @if (!isRosterLocked && team()!.roster_status !== 'submitted') {
+            <td>
+              <div class="flex gap-1">
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="showEditDialog(player)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="confirmDelete(player)"
+                />
+              </div>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="isRosterLocked ? 6 : 7" class="text-center py-5">
+            <i class="pi pi-users mb-3 text-4xl text-surface-300"></i>
+            <p class="text-surface-500">No players in roster yet</p>
+            @if (!isRosterLocked) {
+              <p-button label="Add First Player" icon="pi pi-plus" (onClick)="showAddDialog()" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}
+
+<!-- Player Dialog -->
+<p-dialog
+  [(visible)]="playerDialogVisible"
+  [header]="editingPlayer() ? 'Edit Player' : 'Add Player'"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+>
+  <form [formGroup]="playerForm">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-medium">Name *</label>
+        <input pInputText id="name" formControlName="name" placeholder="Player full name" />
+        @if (playerForm.get('name')?.invalid && playerForm.get('name')?.touched) {
+          <small class="text-red-500">Name is required</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="jersey" class="font-medium">Jersey Number</label>
+        <p-inputNumber 
+          id="jersey" 
+          formControlName="jersey_number" 
+          [min]="1" 
+          [max]="99"
+          placeholder="1-99"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="position" class="font-medium">Position</label>
+        <p-select
+          id="position"
+          [options]="positionOptions"
+          formControlName="position"
+          placeholder="Select position"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="department" class="font-medium">Department</label>
+        <input pInputText id="department" formControlName="department" placeholder="e.g. Computer Science" />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="level" class="font-medium">Level</label>
+        <input pInputText id="level" formControlName="level" placeholder="e.g. 300 Level" />
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="playerDialogVisible.set(false)" />
+    <p-button 
+      [label]="editingPlayer() ? 'Update' : 'Add'" 
+      icon="pi pi-check" 
+      (onClick)="savePlayer()"
+      [loading]="saving()"
+      [disabled]="playerForm.invalid"
+    />
+  </ng-template>
+</p-dialog>

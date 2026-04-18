@@ -1,0 +1,214 @@
+<p-toast />
+
+<div class="card">
+  <div class="mb-4 flex items-center gap-3">
+    <a routerLink="/admin/tournaments">
+      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" />
+    </a>
+    <h2 class="m-0">{{ isEditMode() ? 'Edit Tournament' : 'Create Tournament' }}</h2>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Basic Info -->
+      <div class="col-span-12 md:col-span-6">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="name" class="font-medium">Tournament Name *</label>
+          <input pInputText id="name" formControlName="name" placeholder="Enter tournament name" />
+          @if (form.get('name')?.invalid && form.get('name')?.touched) {
+            <small class="text-red-500">Name is required</small>
+          }
+        </div>
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="format" class="font-medium">Format *</label>
+          <p-select
+            id="format"
+            [options]="formatOptions"
+            formControlName="format"
+            placeholder="Select format"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="col-span-12">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="description" class="font-medium">Description</label>
+          <textarea
+            pTextarea
+            id="description"
+            formControlName="description"
+            rows="3"
+            placeholder="Enter tournament description"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Team Settings -->
+      <div class="col-span-12 md:col-span-6">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="max_teams" class="font-medium">Max Teams *</label>
+          <p-inputNumber
+            id="max_teams"
+            formControlName="max_teams"
+            [min]="2"
+            [max]="64"
+            [showButtons]="true"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="players_per_team" class="font-medium">Players Per Team *</label>
+          <p-inputNumber
+            id="players_per_team"
+            formControlName="players_per_team"
+            [min]="1"
+            [max]="30"
+            [showButtons]="true"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="col-span-12 md:col-span-4">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="registration_deadline" class="font-medium">Registration Deadline *</label>
+          <p-datepicker
+            id="registration_deadline"
+            formControlName="registration_deadline"
+            [showIcon]="true"
+            dateFormat="yy-mm-dd"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="col-span-12 md:col-span-4">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="start_date" class="font-medium">Start Date *</label>
+          <p-datepicker
+            id="start_date"
+            formControlName="start_date"
+            [showIcon]="true"
+            dateFormat="yy-mm-dd"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="col-span-12 md:col-span-4">
+        <div class="mb-4 flex flex-col gap-2">
+          <label for="end_date" class="font-medium">End Date</label>
+          <p-datepicker
+            id="end_date"
+            formControlName="end_date"
+            [showIcon]="true"
+            dateFormat="yy-mm-dd"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Group + Knockout Settings -->
+      @if (isGroupKnockout) {
+        <div class="col-span-12">
+          <div class="mb-4 rounded-md bg-surface-100 p-3">
+            <h4 class="mt-0 mb-3">Group Stage Settings</h4>
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-4">
+                <div class="flex flex-col gap-2">
+                  <label for="group_count" class="font-medium">Number of Groups</label>
+                  <p-inputNumber
+                    id="group_count"
+                    formControlName="group_count"
+                    [min]="2"
+                    [max]="8"
+                    [showButtons]="true"
+                    styleClass="w-full"
+                  />
+                </div>
+              </div>
+              <div class="col-span-12 md:col-span-4">
+                <div class="flex flex-col gap-2">
+                  <label for="qualifiers_per_group" class="font-medium">Qualifiers Per Group</label>
+                  <p-inputNumber
+                    id="qualifiers_per_group"
+                    formControlName="qualifiers_per_group"
+                    [min]="1"
+                    [max]="4"
+                    [showButtons]="true"
+                    styleClass="w-full"
+                  />
+                </div>
+              </div>
+              <div class="col-span-12 md:col-span-4">
+                <div class="flex flex-col gap-2">
+                  <label for="knockout_seeding_strategy" class="font-medium">Seeding Strategy</label>
+                  <p-select
+                    id="knockout_seeding_strategy"
+                    [options]="seedingOptions"
+                    formControlName="knockout_seeding_strategy"
+                    styleClass="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Status (Edit mode only) -->
+      @if (isEditMode()) {
+        <div class="col-span-12 md:col-span-6">
+          <div class="mb-4 flex flex-col gap-2">
+            <label for="status" class="font-medium">Status</label>
+            <p-select
+              id="status"
+              [options]="statusOptions"
+              formControlName="status"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      }
+
+      <!-- Banner Upload -->
+      <div class="col-span-12">
+        <div class="mb-4 flex flex-col gap-2">
+          <label class="font-medium">Tournament Banner</label>
+          <p-fileUpload
+            mode="basic"
+            chooseLabel="Choose Banner"
+            accept="image/*"
+            [maxFileSize]="5000000"
+            (onSelect)="onBannerSelect($event)"
+            styleClass="w-full"
+          />
+          <small class="text-surface-500">Max file size: 5MB. Recommended: 1200x400px</small>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-span-12">
+        <div class="flex justify-end gap-3">
+          <a routerLink="/admin/tournaments">
+            <p-button label="Cancel" severity="secondary" [outlined]="true" />
+          </a>
+          <p-button
+            [label]="isEditMode() ? 'Update Tournament' : 'Create Tournament'"
+            type="submit"
+            [loading]="loading()"
+            [disabled]="form.invalid || loading()"
+          />
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

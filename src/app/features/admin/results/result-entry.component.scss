@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep {
+  .p-inputnumber-input {
+    text-align: center;
+  }
+}

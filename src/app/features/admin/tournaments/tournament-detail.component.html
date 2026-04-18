@@ -1,0 +1,205 @@
+@if (loading()) {
+  <div class="flex justify-center py-8">
+    <p-progressSpinner strokeWidth="4" />
+  </div>
+} @else if (tournament()) {
+  <div class="card mb-4">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-3">
+        <a routerLink="/admin/tournaments">
+          <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" />
+        </a>
+        <div>
+          <h2 class="m-0 mb-1">{{ tournament()!.name }}</h2>
+          <div class="flex items-center gap-2">
+            <p-tag [value]="tournament()!.status.replace('_', ' ')" [severity]="getStatusSeverity(tournament()!.status)" />
+            <span class="text-surface-500">{{ getFormatLabel(tournament()!.format) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <a [routerLink]="['/admin/tournaments', tournament()!.id, 'edit']">
+          <p-button label="Edit" icon="pi pi-pencil" severity="secondary" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tournament Info Summary -->
+  <div class="mb-4 grid grid-cols-12 gap-4">
+    <div class="col-span-12 md:col-span-3">
+      <div class="card text-center">
+        <div class="mb-2 text-surface-500">Max Teams</div>
+        <div class="text-2xl font-bold">{{ tournament()!.max_teams }}</div>
+      </div>
+    </div>
+    <div class="col-span-12 md:col-span-3">
+      <div class="card text-center">
+        <div class="mb-2 text-surface-500">Players/Team</div>
+        <div class="text-2xl font-bold">{{ tournament()!.players_per_team }}</div>
+      </div>
+    </div>
+    <div class="col-span-12 md:col-span-3">
+      <div class="card text-center">
+        <div class="mb-2 text-surface-500">Start Date</div>
+        <div class="text-2xl font-bold">{{ tournament()!.start_date | date:'mediumDate' }}</div>
+      </div>
+    </div>
+    <div class="col-span-12 md:col-span-3">
+      <div class="card text-center">
+        <div class="mb-2 text-surface-500">Registration Deadline</div>
+        <div class="text-2xl font-bold">{{ tournament()!.registration_deadline | date:'mediumDate' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Teams ({{ teams().length }})</p-tab>
+        <p-tab value="1">Matches ({{ matches().length }})</p-tab>
+        <p-tab value="2">Standings</p-tab>
+        <p-tab value="3">Info</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <p-table [value]="teams()" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Team Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Roster Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-team>
+              <tr>
+                <td>{{ team.team_name }}</td>
+                <td>{{ team.email }}</td>
+                <td><p-tag [value]="team.status" [severity]="getStatusSeverity(team.status)" /></td>
+                <td><p-tag [value]="team.roster_status" [severity]="getStatusSeverity(team.roster_status)" /></td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4" class="py-4 text-center text-surface-500">No teams registered yet</td></tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          <p-table [value]="matches()" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>#</th>
+                <th>Home Team</th>
+                <th>Away Team</th>
+                <th>Date</th>
+                <th>Venue</th>
+                <th>Score</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-match>
+              <tr>
+                <td>{{ match.match_number }}</td>
+                <td>{{ match.home_team_name }}</td>
+                <td>{{ match.away_team_name }}</td>
+                <td>{{ match.match_date | date:'short' }}</td>
+                <td>{{ match.venue || 'TBD' }}</td>
+                <td>
+                  @if (match.status === 'completed') {
+                    <span class="font-bold">{{ match.home_score }} - {{ match.away_score }}</span>
+                  } @else {
+                    <span class="text-surface-500">-</span>
+                  }
+                </td>
+                <td><p-tag [value]="match.status" [severity]="getStatusSeverity(match.status)" /></td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="7" class="py-4 text-center text-surface-500">No matches scheduled yet</td></tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+        <p-tabpanel value="2">
+          <p-table [value]="standings()" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 50px">#</th>
+                <th>Team</th>
+                <th class="text-center">P</th>
+                <th class="text-center">W</th>
+                <th class="text-center">D</th>
+                <th class="text-center">L</th>
+                <th class="text-center">GF</th>
+                <th class="text-center">GA</th>
+                <th class="text-center">GD</th>
+                <th class="text-center font-bold">Pts</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-standing let-i="rowIndex">
+              <tr>
+                <td class="font-bold">{{ i + 1 }}</td>
+                <td>{{ standing.team_name }}</td>
+                <td class="text-center">{{ standing.played }}</td>
+                <td class="text-center">{{ standing.wins }}</td>
+                <td class="text-center">{{ standing.draws }}</td>
+                <td class="text-center">{{ standing.losses }}</td>
+                <td class="text-center">{{ standing.goals_for }}</td>
+                <td class="text-center">{{ standing.goals_against }}</td>
+                <td class="text-center">{{ standing.goal_difference }}</td>
+                <td class="text-center font-bold">{{ standing.points }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="10" class="py-4 text-center text-surface-500">No standings data yet</td></tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+        <p-tabpanel value="3">
+          <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-6">
+              <h4>Description</h4>
+              <p>{{ tournament()!.description || 'No description provided' }}</p>
+            </div>
+            <div class="col-span-12 md:col-span-6">
+              <h4>Configuration</h4>
+              <ul class="list-none p-0 m-0">
+                <li class="border-b border-surface-200 py-2">
+                  <span class="text-surface-500">Format:</span>
+                  <span class="font-medium ml-2">{{ getFormatLabel(tournament()!.format) }}</span>
+                </li>
+                @if (tournament()!.format === 'group_knockout') {
+                  <li class="border-b border-surface-200 py-2">
+                    <span class="text-surface-500">Groups:</span>
+                    <span class="font-medium ml-2">{{ tournament()!.group_count }}</span>
+                  </li>
+                  <li class="border-b border-surface-200 py-2">
+                    <span class="text-surface-500">Qualifiers per group:</span>
+                    <span class="font-medium ml-2">{{ tournament()!.qualifiers_per_group }}</span>
+                  </li>
+                  <li class="border-b border-surface-200 py-2">
+                    <span class="text-surface-500">Seeding Strategy:</span>
+                    <span class="font-medium ml-2">{{ tournament()!.knockout_seeding_strategy }}</span>
+                  </li>
+                }
+                <li class="py-2">
+                  <span class="text-surface-500">Created:</span>
+                  <span class="font-medium ml-2">{{ tournament()!.created_at | date:'medium' }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+} @else {
+  <div class="card text-center py-8">
+    <i class="pi pi-exclamation-triangle text-4xl text-orange-500 mb-3"></i>
+    <h3>Tournament Not Found</h3>
+    <a routerLink="/admin/tournaments">
+      <p-button label="Back to Tournaments" />
+    </a>
+  </div>
+}

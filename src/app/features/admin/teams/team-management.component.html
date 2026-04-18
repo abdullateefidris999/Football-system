@@ -1,0 +1,166 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="card">
+  <h2 class="mb-4">Team Management</h2>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-3 mb-4">
+    <div class="flex items-center gap-2">
+      <label for="tournament">Tournament:</label>
+      <p-select
+        id="tournament"
+        [options]="tournamentOptions"
+        [(ngModel)]="selectedTournament"
+        placeholder="All Tournaments"
+        styleClass="w-60"
+      />
+    </div>
+    <div class="flex items-center gap-2">
+      <label for="status">Status:</label>
+      <p-select
+        id="status"
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        placeholder="All"
+        styleClass="w-40"
+      />
+    </div>
+  </div>
+
+  <!-- Teams Table -->
+  <p-table
+    [value]="filteredTeams"
+    [loading]="loading()"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 25]"
+    styleClass="p-datatable-striped"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="team_name">Team Name <p-sortIcon field="team_name" /></th>
+        <th>Tournament</th>
+        <th>Email</th>
+        <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+        <th>Roster</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-team>
+      <tr>
+        <td class="font-medium">{{ team.team_name }}</td>
+        <td>{{ team.tournament_name }}</td>
+        <td>{{ team.email }}</td>
+        <td>
+          <p-tag [value]="team.status" [severity]="getStatusSeverity(team.status)" />
+        </td>
+        <td>
+          <p-tag [value]="team.roster_status" [severity]="getStatusSeverity(team.roster_status === 'locked' ? 'approved' : team.roster_status === 'submitted' ? 'pending' : 'rejected')" />
+        </td>
+        <td>
+          <div class="flex gap-1">
+            <p-button
+              icon="pi pi-users"
+              [rounded]="true"
+              [text]="true"
+              severity="info"
+              pTooltip="View Roster"
+              (onClick)="viewRoster(team)"
+            />
+            @if (team.status === 'pending') {
+              <p-button
+                icon="pi pi-check"
+                [rounded]="true"
+                [text]="true"
+                severity="success"
+                pTooltip="Approve"
+                (onClick)="confirmApprove(team)"
+              />
+              <p-button
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                pTooltip="Reject"
+                (onClick)="confirmReject(team)"
+              />
+            }
+            @if (team.status === 'approved') {
+              <p-button
+                icon="pi pi-ban"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                pTooltip="Disqualify"
+                (onClick)="confirmDisqualify(team)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center py-5 text-surface-500">No teams found</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Roster Dialog -->
+<p-dialog
+  [(visible)]="rosterDialogVisible"
+  [header]="'Roster: ' + selectedTeam()?.team_name"
+  [modal]="true"
+  [style]="{ width: '50vw' }"
+  [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+>
+  @if (loadingRoster()) {
+    <div class="flex justify-center py-5">
+      <i class="pi pi-spin pi-spinner text-4xl"></i>
+    </div>
+  } @else {
+    <p-table [value]="teamPlayers()" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Captain</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-player>
+        <tr>
+          <td>{{ player.jersey_number }}</td>
+          <td>{{ player.name }}</td>
+          <td>{{ player.position || '-' }}</td>
+          <td>{{ player.department || '-' }}</td>
+          <td>
+            @if (player.is_captain) {
+              <i class="pi pi-star-fill text-yellow-500"></i>
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="py-4 text-center text-surface-500">No players in roster</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="mt-4 flex items-center justify-between border-t border-surface-200 pt-3">
+      <span class="text-surface-500">{{ teamPlayers().length }} players</span>
+      @if (selectedTeam()?.roster_status === 'submitted') {
+        <p-button
+          label="Lock Roster"
+          icon="pi pi-lock"
+          severity="warn"
+          (onClick)="lockRoster(selectedTeam()!)"
+        />
+      }
+    </div>
+  }
+</p-dialog>

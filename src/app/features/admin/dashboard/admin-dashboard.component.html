@@ -1,0 +1,218 @@
+<div class="dashboard-container">
+  <!-- Welcome Header -->
+  <div class="welcome-section mb-4">
+    <h1 class="m-0 mb-2 text-3xl font-bold text-surface-900">Admin Dashboard</h1>
+    <p class="m-0 text-surface-500">Welcome back! Here's what's happening with your tournaments.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12 md:col-span-6 xl:col-span-3">
+      <div class="stat-card stat-card-blue">
+        <div class="stat-icon">
+          <i class="pi pi-trophy"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Total Tournaments</span>
+          <span class="stat-value">{{ stats().totalTournaments }}</span>
+          <span class="stat-subtitle">
+            <i class="pi pi-circle-fill text-green-500 mr-1" style="font-size: 0.5rem"></i>
+            {{ stats().activeTournaments }} active
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3">
+      <div class="stat-card stat-card-green">
+        <div class="stat-icon">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Total Teams</span>
+          <span class="stat-value">{{ stats().totalTeams }}</span>
+          <span class="stat-subtitle">Registered teams</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3">
+      <div class="stat-card stat-card-orange">
+        <div class="stat-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Pending Approvals</span>
+          <span class="stat-value">{{ stats().pendingApprovals }}</span>
+          <a routerLink="/admin/teams" class="stat-link">
+            View all <i class="pi pi-arrow-right ml-1"></i>
+          </a>
+        </div>
+        @if (stats().pendingApprovals > 0) {
+          <span class="alert-badge">{{ stats().pendingApprovals }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3">
+      <div class="stat-card stat-card-purple">
+        <div class="stat-icon">
+          <i class="pi pi-calendar"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Upcoming Matches</span>
+          <span class="stat-value">{{ stats().upcomingMatches }}</span>
+          <a routerLink="/admin/matches" class="stat-link">
+            View schedule <i class="pi pi-arrow-right ml-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card mt-4 mb-4">
+    <div class="mb-3 flex items-center">
+      <i class="pi pi-bolt mr-2 text-xl text-primary-500"></i>
+      <h2 class="text-lg font-semibold m-0">Quick Actions</h2>
+    </div>
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-6 md:col-span-3">
+        <a routerLink="/admin/tournaments/new" class="action-button action-primary bg-[#10b981]!">
+          <i class="pi pi-plus-circle"></i>
+          <span>Create Tournament</span>
+        </a>
+      </div>
+      <div class="col-span-6 md:col-span-3">
+        <a routerLink="/admin/teams" class="action-button action-secondary">
+          <i class="pi pi-users"></i>
+          <span>Manage Teams</span>
+        </a>
+      </div>
+      <div class="col-span-6 md:col-span-3">
+        <a routerLink="/admin/matches" class="action-button action-secondary">
+          <i class="pi pi-calendar-plus"></i>
+          <span>Schedule Matches</span>
+        </a>
+      </div>
+      <div class="col-span-6 md:col-span-3">
+        <a routerLink="/admin/results" class="action-button action-secondary">
+          <i class="pi pi-pencil"></i>
+          <span>Enter Results</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Tables Row -->
+  <div class="grid grid-cols-12 gap-4">
+    <!-- Recent Teams -->
+    <div class="col-span-12 xl:col-span-6">
+      <div class="card h-full">
+        <div class="mb-3 flex items-center justify-between">
+          <div class="flex items-center">
+            <i class="pi pi-user-plus mr-2 text-xl text-primary-500"></i>
+            <h3 class="text-lg font-semibold m-0">Recent Team Registrations</h3>
+          </div>
+          <a routerLink="/admin/teams" class="text-sm text-primary-500 no-underline hover:underline">
+            View All <i class="pi pi-arrow-right ml-1" style="font-size: 0.75rem"></i>
+          </a>
+        </div>
+
+        @if (loading()) {
+          <div class="flex flex-col items-center justify-center py-5">
+            <i class="pi pi-spin pi-spinner mb-3 text-4xl text-primary-500"></i>
+            <span class="text-surface-500">Loading teams...</span>
+          </div>
+        } @else if (recentTeams().length === 0) {
+          <div class="flex flex-col items-center justify-center py-5 text-center">
+            <div class="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-primary-50">
+              <i class="pi pi-users text-3xl text-primary-500"></i>
+            </div>
+            <h4 class="m-0 mb-2 text-surface-900">No Teams Yet</h4>
+            <p class="m-0 text-sm text-surface-500">Teams will appear here once they register for tournaments.</p>
+          </div>
+        } @else {
+          <p-table [value]="recentTeams()" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Team</th>
+                <th>Tournament</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-team>
+              <tr>
+                <td class="font-medium">{{ team.team_name }}</td>
+                <td class="text-surface-500">{{ team.tournament_name }}</td>
+                <td>
+                  <p-tag [value]="team.status" [severity]="getStatusSeverity(team.status)" />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+    </div>
+
+    <!-- Upcoming Matches -->
+    <div class="col-span-12 xl:col-span-6">
+      <div class="card h-full">
+        <div class="mb-3 flex items-center justify-between">
+          <div class="flex items-center">
+            <i class="pi pi-calendar mr-2 text-xl text-primary-500"></i>
+            <h3 class="text-lg font-semibold m-0">Upcoming Matches</h3>
+          </div>
+          <a routerLink="/admin/matches" class="text-sm text-primary-500 no-underline hover:underline">
+            View All <i class="pi pi-arrow-right ml-1" style="font-size: 0.75rem"></i>
+          </a>
+        </div>
+
+        @if (loading()) {
+          <div class="flex flex-col items-center justify-center py-5">
+            <i class="pi pi-spin pi-spinner mb-3 text-4xl text-primary-500"></i>
+            <span class="text-surface-500">Loading matches...</span>
+          </div>
+        } @else if (upcomingMatches().length === 0) {
+          <div class="flex flex-col items-center justify-center py-5 text-center">
+            <div class="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-primary-50">
+              <i class="pi pi-calendar text-3xl text-primary-500"></i>
+            </div>
+            <h4 class="m-0 mb-2 text-surface-900">No Upcoming Matches</h4>
+            <p class="m-0 mb-3 text-sm text-surface-500">Schedule matches from the Matches page.</p>
+            <a routerLink="/admin/matches">
+              <p-button label="Schedule Match" icon="pi pi-plus" size="small" />
+            </a>
+          </div>
+        } @else {
+          <p-table [value]="upcomingMatches()" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Match</th>
+                <th>Date</th>
+                <th>Venue</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-match>
+              <tr>
+                <td>
+                  <span class="font-medium">{{ match.home_team_name }}</span>
+                  <span class="mx-1 text-surface-500">vs</span>
+                  <span class="font-medium">{{ match.away_team_name }}</span>
+                </td>
+                <td class="text-surface-500">{{ match.match_date | date:'MMM d, y' }}</td>
+                <td>
+                  @if (match.venue) {
+                    <span class="text-surface-500">{{ match.venue }}</span>
+                  } @else {
+                    <span class="italic text-surface-400">TBD</span>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+    </div>
+  </div>
+</div>

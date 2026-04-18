@@ -1,0 +1,111 @@
+@if (loading()) {
+  <div class="flex justify-center py-8">
+    <p-progressSpinner strokeWidth="4" />
+  </div>
+} @else if (!team()) {
+  <div class="card text-center py-8">
+    <i class="pi pi-exclamation-triangle text-5xl text-orange-500 mb-4"></i>
+    <h2>No Team Found</h2>
+    <p class="text-surface-500">You need to register for a tournament first.</p>
+  </div>
+} @else {
+  <div class="card">
+    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <h2 class="m-0">Match Schedule</h2>
+      <p-selectButton 
+        [options]="filterOptions" 
+        [(ngModel)]="selectedFilter" 
+        optionLabel="label" 
+        optionValue="value"
+      />
+    </div>
+
+    <!-- Match Stats -->
+    <div class="mb-4 grid grid-cols-12 gap-3">
+      <div class="col-span-12 md:col-span-4">
+        <div class="rounded-md bg-surface-100 p-3 text-center">
+          <div class="text-2xl font-bold text-primary-500">{{ matches.length }}</div>
+          <div class="text-sm text-surface-500">Total Matches</div>
+        </div>
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <div class="rounded-md bg-surface-100 p-3 text-center">
+          <div class="text-2xl font-bold text-blue-500">{{ upcomingMatches.length }}</div>
+          <div class="text-sm text-surface-500">Upcoming</div>
+        </div>
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <div class="rounded-md bg-surface-100 p-3 text-center">
+          <div class="text-2xl font-bold text-green-500">{{ completedMatches.length }}</div>
+          <div class="text-sm text-surface-500">Completed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matches Table -->
+    <p-table [value]="filteredMatches" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px">#</th>
+          <th>Opponent</th>
+          <th>Home/Away</th>
+          <th>Date</th>
+          <th>Venue</th>
+          <th>Score</th>
+          <th>Result</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-match>
+        <tr>
+          <td>{{ match.match_number }}</td>
+          <td class="font-medium">
+            {{ isHomeTeam(match) ? match.away_team_name : match.home_team_name }}
+          </td>
+          <td>
+            <p-tag 
+              [value]="isHomeTeam(match) ? 'Home' : 'Away'" 
+              [severity]="isHomeTeam(match) ? 'success' : 'info'"
+            />
+          </td>
+          <td>
+            @if (match.match_date) {
+              {{ match.match_date | date:'medium' }}
+            } @else {
+              <span class="text-surface-500">TBD</span>
+            }
+          </td>
+          <td>{{ match.venue || 'TBD' }}</td>
+          <td>
+            @if (match.status === 'completed') {
+              <span class="font-bold">
+                {{ match.home_score }} - {{ match.away_score }}
+              </span>
+            } @else {
+              <span class="text-surface-500">-</span>
+            }
+          </td>
+          <td>
+            @if (match.status === 'completed') {
+              @let result = getMatchResult(match);
+              <p-tag 
+                [value]="result || '-'" 
+                [severity]="getResultSeverity(result)"
+                [style]="{ textTransform: 'uppercase' }"
+              />
+            } @else {
+              <p-tag [value]="match.status" [severity]="getStatusSeverity(match.status)" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-5">
+            <i class="pi pi-calendar mb-3 text-4xl text-surface-300"></i>
+            <p class="text-surface-500">No matches found</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

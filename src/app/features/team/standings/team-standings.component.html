@@ -1,0 +1,141 @@
+@if (loading()) {
+  <div class="flex justify-center py-8">
+    <p-progressSpinner strokeWidth="4" />
+  </div>
+} @else if (!team()) {
+  <div class="card text-center py-8">
+    <i class="pi pi-exclamation-triangle text-5xl text-orange-500 mb-4"></i>
+    <h2>No Team Found</h2>
+    <p class="text-surface-500">You need to register for a tournament first.</p>
+  </div>
+} @else {
+  <div class="card">
+    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="m-0 mb-1">Tournament Standings</h2>
+        @if (tournament()) {
+          <span class="text-surface-500">{{ tournament()!.name }}</span>
+        }
+      </div>
+      <p-button 
+        label="Refresh" 
+        icon="pi pi-refresh" 
+        [loading]="refreshing()"
+        (onClick)="refresh()"
+        severity="secondary"
+        [outlined]="true"
+      />
+    </div>
+
+    <!-- Team Position Summary -->
+    @if (teamStanding) {
+      <div class="mb-4 rounded-md bg-surface-100 p-4">
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <div class="text-center">
+            <div class="text-4xl font-bold text-primary-500">{{ teamRank }}</div>
+            <div class="text-sm text-surface-500">Position</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold">{{ teamStanding.points }}</div>
+            <div class="text-sm text-surface-500">Points</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-green-500">{{ teamStanding.wins }}</div>
+            <div class="text-sm text-surface-500">Wins</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-gray-500">{{ teamStanding.draws }}</div>
+            <div class="text-sm text-surface-500">Draws</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-red-500">{{ teamStanding.losses }}</div>
+            <div class="text-sm text-surface-500">Losses</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold" [class.text-green-500]="teamStanding.goal_difference > 0" [class.text-red-500]="teamStanding.goal_difference < 0">
+              {{ teamStanding.goal_difference > 0 ? '+' : '' }}{{ teamStanding.goal_difference }}
+            </div>
+            <div class="text-sm text-surface-500">Goal Diff</div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Standings Table -->
+    <p-table [value]="standings" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px" class="text-center">#</th>
+          <th>Team</th>
+          <th class="text-center" style="width: 50px">P</th>
+          <th class="text-center" style="width: 50px">W</th>
+          <th class="text-center" style="width: 50px">D</th>
+          <th class="text-center" style="width: 50px">L</th>
+          <th class="text-center" style="width: 50px">GF</th>
+          <th class="text-center" style="width: 50px">GA</th>
+          <th class="text-center" style="width: 60px">GD</th>
+          <th class="text-center font-bold" style="width: 60px">Pts</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-standing let-i="rowIndex">
+        <tr [class.bg-primary-50]="isCurrentTeam(standing)" [class.font-bold]="isCurrentTeam(standing)">
+          <td class="text-center">
+            @if (i < 3) {
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full"
+                    [class.bg-yellow-500]="i === 0"
+                    [class.bg-gray-400]="i === 1"
+                    [class.bg-orange-400]="i === 2"
+                    [class.text-white]="i < 3">
+                {{ i + 1 }}
+              </span>
+            } @else {
+              {{ i + 1 }}
+            }
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              @if (standing.team_logo) {
+                <img [src]="standing.team_logo" [alt]="standing.team_name" class="h-8 w-8 rounded-full" />
+              }
+              <span>{{ standing.team_name }}</span>
+              @if (isCurrentTeam(standing)) {
+                <p-tag value="You" severity="info" [style]="{ fontSize: '0.7rem' }" />
+              }
+            </div>
+          </td>
+          <td class="text-center">{{ standing.played }}</td>
+          <td class="text-center text-green-500">{{ standing.wins }}</td>
+          <td class="text-center text-gray-500">{{ standing.draws }}</td>
+          <td class="text-center text-red-500">{{ standing.losses }}</td>
+          <td class="text-center">{{ standing.goals_for }}</td>
+          <td class="text-center">{{ standing.goals_against }}</td>
+          <td class="text-center" [class.text-green-500]="standing.goal_difference > 0" [class.text-red-500]="standing.goal_difference < 0">
+            {{ standing.goal_difference > 0 ? '+' : '' }}{{ standing.goal_difference }}
+          </td>
+          <td class="text-center font-bold text-lg">{{ standing.points }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center py-5">
+            <i class="pi pi-chart-bar mb-3 text-4xl text-surface-300"></i>
+            <p class="text-surface-500">No standings data yet</p>
+            <p class="text-sm text-surface-500">Standings will appear after matches are played</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Legend -->
+    <div class="mt-4 text-sm text-surface-500">
+      <span class="mr-3"><b>P</b> - Played</span>
+      <span class="mr-3"><b>W</b> - Wins</span>
+      <span class="mr-3"><b>D</b> - Draws</span>
+      <span class="mr-3"><b>L</b> - Losses</span>
+      <span class="mr-3"><b>GF</b> - Goals For</span>
+      <span class="mr-3"><b>GA</b> - Goals Against</span>
+      <span class="mr-3"><b>GD</b> - Goal Difference</span>
+      <span><b>Pts</b> - Points</span>
+    </div>
+  </div>
+}

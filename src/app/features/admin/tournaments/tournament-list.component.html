@@ -1,0 +1,103 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="card">
+  <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <h2 class="m-0">Tournaments</h2>
+    <a routerLink="/admin/tournaments/new">
+      <p-button label="Create Tournament" icon="pi pi-plus" />
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-3 mb-4">
+    <div class="flex items-center gap-2">
+      <label for="status">Status:</label>
+      <p-select
+        id="status"
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        placeholder="All"
+        [showClear]="true"
+        styleClass="w-48"
+      />
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          [(ngModel)]="searchTerm"
+          placeholder="Search tournaments..."
+          class="w-full md:w-80"
+        />
+      </span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <p-table
+    [value]="filteredTournaments"
+    [loading]="tournamentService.loading()"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 25]"
+    styleClass="p-datatable-striped"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+        <th>Format</th>
+        <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+        <th>Teams</th>
+        <th pSortableColumn="start_date">Start Date <p-sortIcon field="start_date" /></th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-tournament>
+      <tr>
+        <td>
+          <a [routerLink]="['/admin/tournaments', tournament.id]" class="font-medium text-primary-500 hover:text-primary-600">
+            {{ tournament.name }}
+          </a>
+        </td>
+        <td>{{ getFormatLabel(tournament.format) }}</td>
+        <td>
+          <p-tag [value]="tournament.status.replace('_', ' ')" [severity]="getStatusSeverity(tournament.status)" />
+        </td>
+        <td>{{ tournament.max_teams }}</td>
+        <td>{{ tournament.start_date | date:'mediumDate' }}</td>
+        <td>
+          <div class="flex gap-2">
+            <a [routerLink]="['/admin/tournaments', tournament.id]">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" />
+            </a>
+            <a [routerLink]="['/admin/tournaments', tournament.id, 'edit']">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" />
+            </a>
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              (onClick)="confirmDelete(tournament)"
+            />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center py-5">
+          <div class="flex flex-col items-center">
+            <i class="pi pi-trophy mb-3 text-4xl text-surface-300"></i>
+            <span class="text-surface-500">No tournaments found</span>
+            <a routerLink="/admin/tournaments/new" class="mt-3">
+              <p-button label="Create your first tournament" [link]="true" />
+            </a>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
