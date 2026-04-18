@@ -35,14 +35,14 @@ import { TournamentService } from '@/app/core/services/tournament.service';
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <!-- Badge -->
           <span class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-lg">
-            <i class="pi pi-trophy text-yellow-400"></i>
+            <i class="pi pi-trophy text-primary"></i>
             Official Tournament Platform
           </span>
 
           <!-- Headline with text shadow -->
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white! mb-6 leading-tight drop-shadow-lg">
             MIU Football<br />
-            <span class="text-yellow-400">Tournament System</span>
+            <span class="text-primary">Tournament System</span>
           </h1>
 
           <!-- Subheadline -->
@@ -68,7 +68,7 @@ import { TournamentService } from '@/app/core/services/tournament.service';
                 [outlined]="true"
                 size="large"
                 styleClass="font-semibold px-8"
-                [style]="{ 'color': 'white', 'border-color': 'white' }"
+                [style]="{ 'color': 'white', 'border-color': 'white', 'background-color': 'transparent' }"
               />
             </a>
           </div>
@@ -77,15 +77,15 @@ import { TournamentService } from '@/app/core/services/tournament.service';
           <div class="mt-16 grid grid-cols-3 gap-4 max-w-lg mx-auto bg-black/40 backdrop-blur-sm rounded-xl p-6">
             <div class="text-center">
               <div class="text-3xl font-bold text-white drop-shadow-md">50+</div>
-              <div class="text-yellow-400 text-sm font-medium">Teams</div>
+              <div class="text-primary text-sm font-medium">Teams</div>
             </div>
             <div class="text-center border-x border-white/20">
               <div class="text-3xl font-bold text-white drop-shadow-md">10+</div>
-              <div class="text-yellow-400 text-sm font-medium">Tournaments</div>
+              <div class="text-primary text-sm font-medium">Tournaments</div>
             </div>
             <div class="text-center">
               <div class="text-3xl font-bold text-white drop-shadow-md">500+</div>
-              <div class="text-yellow-400 text-sm font-medium">Players</div>
+              <div class="text-primary text-sm font-medium">Players</div>
             </div>
           </div>
         </div>
