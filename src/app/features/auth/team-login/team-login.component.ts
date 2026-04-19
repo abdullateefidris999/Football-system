@@ -103,7 +103,7 @@ import { AuthService } from '@/app/core/services/auth.service';
             </form>
 
             <!-- Register Link -->
-            <p class="text-center mt-6 text-sm text-surface-600 dark:text-surface-400">
+            <p class="text-center mt-6! text-sm text-surface-600 dark:text-surface-400">
               Don't have a team account? 
               <a routerLink="/" class="text-primary font-semibold hover:underline ml-1">
                 Register for a tournament
